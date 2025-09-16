@@ -1,6 +1,17 @@
-streamlit
+# Streamlit for the web app
+streamlit==1.30.0
+
+# TensorFlow for model loading and prediction
 tensorflow==2.13.0
-pillow
-numpy
-matplotlib
-h5py
+
+# Pillow for image handling
+Pillow==9.5.0
+
+# Numpy for numerical operations
+numpy==1.25.0
+
+# Matplotlib for plotting prediction probabilities
+matplotlib==3.8.1
+
+# h5py for reading the .h5 model files
+h5py==3.9.0

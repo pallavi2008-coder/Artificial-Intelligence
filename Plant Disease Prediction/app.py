@@ -41,13 +41,13 @@ except Exception as e:
     st.stop()
 
 # ============================
-# Disease remedies
+# Disease info (dummy for now)
 # ============================
 disease_info = {
-    "Apple Scab": "🍎 Remove infected leaves, use fungicide sprays, keep orchard floor clean.",
-    "Potato Early Blight": "🥔 Crop rotation, remove infected plants, apply fungicides.",
-    "Tomato Leaf Spot": "🍅 Remove affected leaves, maintain proper spacing, apply copper-based fungicide.",
-    "Healthy": "✅ Plant is healthy! Maintain water, sunlight, and nutrients."
+    "Healthy": "This leaf looks healthy 🌱. Keep taking care of your plant!",
+    "Powdery Mildew": "White patches on leaf surface. Spray neem oil as remedy.",
+    "Rust": "Orange/brown spots caused by fungus. Remove infected leaves.",
+    "Blight": "Dark spots spreading rapidly. Use fungicide immediately."
 }
 
 # ============================
@@ -61,8 +61,8 @@ if "prediction_result" not in st.session_state:
     st.session_state.prediction_result = None
 if "confidence" not in st.session_state:
     st.session_state.confidence = None
-if "preds" not in st.session_state:
-    st.session_state.preds = None  # Store prediction probabilities
+if "preds" not in st.session_state:   # store prediction array
+    st.session_state.preds = None
 
 # ============================
 # Streamlit UI
@@ -77,7 +77,7 @@ if st.session_state.uploaded_file is None:
     if uploaded_file:
         st.session_state.uploaded_file = uploaded_file
 
-# Display uploaded image and prediction
+# Display uploaded image
 if st.session_state.uploaded_file:
     try:
         img = Image.open(st.session_state.uploaded_file).convert("RGB")
@@ -86,7 +86,7 @@ if st.session_state.uploaded_file:
         if width < 50 or height < 50:
             st.error("❌ Image too small or invalid. Please upload a proper leaf image.")
         else:
-            st.image(img, caption="Uploaded Leaf", use_column_width=True)
+            st.image(img, caption="Uploaded Leaf", width=300)
 
             # Predict button
             if st.button("Predict Disease 🌿") and not st.session_state.prediction_done:
@@ -95,13 +95,14 @@ if st.session_state.uploaded_file:
                     x = image.img_to_array(img_resized)
                     x = np.expand_dims(x, axis=0)
                     x = preprocess_input(x)
-                    st.session_state.preds = model.predict(x)  # Save probabilities
-                    class_idx = np.argmax(st.session_state.preds)
+                    preds = model.predict(x)
+                    class_idx = np.argmax(preds)
                     st.session_state.prediction_result = class_labels[class_idx]
-                    st.session_state.confidence = np.max(st.session_state.preds)
+                    st.session_state.confidence = np.max(preds)
+                    st.session_state.preds = preds   # save predictions
                     st.session_state.prediction_done = True
 
-            # Display prediction results only if prediction done
+            # Display prediction results
             if st.session_state.prediction_done:
                 st.markdown(f"""
                 <div style='border:2px solid #4CAF50; padding:15px; border-radius:10px; background-color:#f0fff0'>
@@ -109,22 +110,22 @@ if st.session_state.uploaded_file:
                 <p><strong>Confidence:</strong> {st.session_state.confidence*100:.2f}%</p>
                 <p><strong>Remedy / Info:</strong> {disease_info.get(st.session_state.prediction_result, "No info available.")}</p>
                 </div>
-                """ , unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
                 # Probability chart
-                fig, ax = plt.subplots(figsize=(4,3))
-                ax.barh(class_labels, st.session_state.preds[0], color="green")
-                ax.set_xlabel("Probability")
-                ax.set_title("Prediction Probabilities")
-                st.pyplot(fig)
+                if st.session_state.preds is not None:
+                    fig, ax = plt.subplots(figsize=(4,3))
+                    ax.barh(class_labels, st.session_state.preds[0], color="green")
+                    ax.set_xlabel("Probability")
+                    ax.set_title("Prediction Probabilities")
+                    st.pyplot(fig)
 
     except Exception as e:
         st.error(f"❌ Could not process image. Upload a valid leaf. Error: {e}")
 
 # Clear / reset button
 if st.session_state.uploaded_file:
-    if st.button("🗑️ Clear Image / New Prediction"):
-        # Clear everything safely
+    if st.button("🗑️ Clear Image"):
         st.session_state.uploaded_file = None
         st.session_state.prediction_done = False
         st.session_state.prediction_result = None

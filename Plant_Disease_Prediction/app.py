@@ -41,16 +41,6 @@ except Exception as e:
     st.stop()
 
 # ============================
-# Disease info (dummy for now)
-# ============================
-disease_info = {
-    "Healthy": "This leaf looks healthy 🌱. Keep taking care of your plant!",
-    "Powdery Mildew": "White patches on leaf surface. Spray neem oil as remedy.",
-    "Rust": "Orange/brown spots caused by fungus. Remove infected leaves.",
-    "Blight": "Dark spots spreading rapidly. Use fungicide immediately."
-}
-
-# ============================
 # Session state
 # ============================
 if "uploaded_file" not in st.session_state:
@@ -108,7 +98,6 @@ if st.session_state.uploaded_file:
                 <div style='border:2px solid #4CAF50; padding:15px; border-radius:10px; background-color:#f0fff0'>
                 <h3 style='color:#4CAF50;'>✅ Prediction: {st.session_state.prediction_result}</h3>
                 <p><strong>Confidence:</strong> {st.session_state.confidence*100:.2f}%</p>
-                <p><strong>Remedy / Info:</strong> {disease_info.get(st.session_state.prediction_result, "No info available.")}</p>
                 </div>
                 """, unsafe_allow_html=True)
 

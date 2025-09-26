@@ -5,6 +5,7 @@ import cv2
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 import webbrowser
+import os
 
 # -------------------------------
 # Load trained model
@@ -103,5 +104,6 @@ if uploaded_file is not None:
                 st.markdown(f"🔗 [Learn more here]({solution['source']})")
             else:
                 st.warning("⚠️ No detailed remedy available for this disease yet.")
+
 
 

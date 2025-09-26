@@ -4,8 +4,8 @@ import numpy as np
 import cv2
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-import webbrowser
 import os
+from solutions import solutions  # Your solutions dictionary
 
 # -------------------------------
 # Load trained model
@@ -35,16 +35,14 @@ class_labels = {
 }
 
 # -------------------------------
-# Expanded solutions with sources
+# Leaf detection function (in-memory)
 # -------------------------------
-
-from solutions import solutions
-
-# -------------------------------
-# Leaf detection function
-# -------------------------------
-def is_leaf(img_path, threshold=0.02):
-    img = cv2.imread(img_path)
+def is_leaf(file_bytes, threshold=0.02):
+    # Convert bytes to NumPy array
+    nparr = np.frombuffer(file_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    if img is None:
+        return False
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     lower_green = np.array([25, 40, 40])
     upper_green = np.array([95, 255, 255])
@@ -53,13 +51,16 @@ def is_leaf(img_path, threshold=0.02):
     return green_ratio > threshold
 
 # -------------------------------
-# Prediction function
+# Prediction function (in-memory)
 # -------------------------------
-def predict_disease(img_path):
-    if not is_leaf(img_path):
+def predict_disease(file_bytes):
+    if not is_leaf(file_bytes):
         return "❌ Error: Uploaded image does not appear to be a leaf.", None
 
-    img = image.load_img(img_path, target_size=(224, 224))
+    nparr = np.frombuffer(file_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
+    img = cv2.resize(img, (224, 224))
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
     img_array = preprocess_input(img_array)
@@ -75,22 +76,29 @@ def predict_disease(img_path):
 st.set_page_config(page_title="🌿 Plant Disease Detector", layout="wide")
 
 st.title("🌱 Smart Plant Disease Prediction System")
-st.write("Upload a leaf image to check if it's **healthy** or **diseased**, and get remedies with trusted resources.")
+st.write(
+    "Upload a leaf image to check if it's **healthy** or **diseased**, "
+    "and get remedies with trusted resources."
+)
 
-uploaded_file = st.file_uploader("📤 Upload a leaf image (JPG/PNG)", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader(
+    "📤 Upload a leaf image (JPG/PNG)", type=["jpg", "jpeg", "png"]
+)
 
 if uploaded_file is not None:
-    with open("temp.jpg", "wb") as f:
-        f.write(uploaded_file.getbuffer())
+    file_bytes = uploaded_file.read()
 
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        st.image("temp.jpg", caption="🌿 Uploaded Leaf", use_container_width=True)
+        # Display uploaded image
+        nparr = np.frombuffer(file_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        st.image(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), caption="🌿 Uploaded Leaf", use_column_width=True)
 
     with col2:
         with st.spinner("🔍 Analyzing the leaf..."):
-            prediction, solution = predict_disease("temp.jpg")
+            prediction, solution = predict_disease(file_bytes)
 
         if prediction.startswith("❌"):
             st.error(prediction)
@@ -104,6 +112,8 @@ if uploaded_file is not None:
                 st.markdown(f"🔗 [Learn more here]({solution['source']})")
             else:
                 st.warning("⚠️ No detailed remedy available for this disease yet.")
+
+
 
 
 

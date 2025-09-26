@@ -9,7 +9,7 @@ import webbrowser
 # -------------------------------
 # Load trained model
 # -------------------------------
-MODEL_PATH = "best_plant_disease_model.h5"
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "best_plant_disease_model.h5")
 model = tf.keras.models.load_model(MODEL_PATH)
 
 # -------------------------------
@@ -103,4 +103,5 @@ if uploaded_file is not None:
                 st.markdown(f"🔗 [Learn more here]({solution['source']})")
             else:
                 st.warning("⚠️ No detailed remedy available for this disease yet.")
+
 
